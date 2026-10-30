@@ -49,6 +49,7 @@ yarn.install: ${APP_DIR}/yarn.lock
 ${APP_DIR}/yarn.lock:
 	ln -sf ${APP_DIR}/node_modules node_modules
 	touch ${APP_DIR}/yarn.lock
+	cd ${APP_DIR} && npm pkg set resolutions.webpack="~5.111.0" # Temp: webpack >= 5.112 removed the LoaderDependency module that @symfony/stimulus-bridge < 4.0.2 loads
 	cd ${APP_DIR} && ${YARN} install && ${YARN} build
 # No CSS and JS on this plugin yet
 #	${YARN} install
@@ -77,6 +78,7 @@ setup_application:
 	(cd ${APP_DIR} && ${COMPOSER} require --no-install --no-scripts --no-progress sylius/sylius="~${SYLIUS_VERSION}") # Make sure to install the required version of sylius because the sylius-standard has a soft constraint
 	$(if ${SYMFONY_VERSION},(cd ${APP_DIR} && ${COMPOSER} config extra.symfony.require "~${SYMFONY_VERSION}")) # Optional: sylius-standard requires Symfony ^7.4 by default
 	(cd ${APP_DIR} && ${COMPOSER} require --no-install --no-scripts --no-progress doctrine/orm="~${DOCTRINE_ORM_VERSION}") # Temp: ORM >= 3.7 fails schema:validate on the unused ShipmentUnit mapping (Sylius/Sylius#19235, fixed only in sylius-standard 2.1.6's lock, PHP ^8.3)
+	(cd ${APP_DIR} && if grep -q FOSRestBundle config/bundles.php; then ${COMPOSER} require --no-install --no-scripts --no-progress friendsofsymfony/rest-bundle="^3.7"; fi) # Temp: sylius-standard < 2.3 registers FOSRestBundle, which sylius/paypal-plugin >= 2.1 no longer requires
 	$(MAKE) ${APP_DIR}/.php-version
 	$(MAKE) ${APP_DIR}/php.ini
 	(cd ${APP_DIR} && ${COMPOSER} install --no-interaction)

@@ -19,6 +19,7 @@ jobs:
         php: ['8.2', '8.3']
         sylius: ["~2.0.0", "~2.1.0"]
         include:
+          - { php: '8.3', sylius: '~2.2.0' }
           - { php: '8.4', sylius: '~2.3.0', symfony: '~8' }
           - { php: '8.5', sylius: '~2.3.0', symfony: '~8' }
 
@@ -74,6 +75,12 @@ jobs:
         working-directory: ./sylius
         run: |
             composer config --no-plugins extra.symfony.require "${{ matrix.symfony }}"
+
+      # Because the sylius-standard < 2.3 registers FOSRestBundle, which sylius/paypal-plugin >= 2.1 no longer requires
+      - name: Make sure FOSRestBundle is installed when registered
+        working-directory: ./sylius
+        run: |
+            if grep -q FOSRestBundle config/bundles.php; then composer require --no-install --no-scripts --no-progress friendsofsymfony/rest-bundle="^3.7"; fi
 
       - name: Setup some requirements
         working-directory: ./sylius
